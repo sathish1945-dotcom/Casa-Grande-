@@ -1,0 +1,8 @@
+{
+  "name": "Elvira Crest Luxury Realty",
+  "description": "Premier luxury residential developer in Tamil Nadu. Explore architectural residences, beachfront penthouses, smart townships, and AI-assisted property discovery across Chennai, Coimbatore, and Bengaluru.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
