@@ -185,6 +185,22 @@ Inquiries: +91 44 4890 2200 | concierge@elviracrest.com
           </div>
         ) : (
           <form onSubmit={handleDownloadSubmit} className="p-6 space-y-4">
+            <div className="p-2.5 rounded bg-[#F2ECE1] border border-[#C5A880]/50 flex items-center justify-between gap-2 text-xs">
+              <span className="text-[#0D2818] font-medium">Sample Demo Mode</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setFullName('Divya Lakshmanan (Sample Demo)');
+                  setPhone('9444188220');
+                  setEmail('divya.demo@elviracrest.com');
+                  setErrorMsg(null);
+                }}
+                className="px-2.5 py-1 rounded bg-[#0D2818] text-[#FAF8F5] hover:bg-[#183F29] font-semibold text-[11px] uppercase tracking-wider shrink-0"
+              >
+                Auto-Fill Sample Buyer
+              </button>
+            </div>
+
             <div className="flex items-center gap-3 p-3 rounded bg-[#FFFFFF] border border-[#E5DFD3]">
               <img src={project.heroImage} alt={project.name} className="w-16 h-12 object-cover rounded" />
               <div>

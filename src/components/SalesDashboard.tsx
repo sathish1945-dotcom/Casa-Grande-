@@ -4,9 +4,7 @@ import {
   Lock,
   Download,
   Search,
-  Filter,
   CheckCircle,
-  Clock,
   Calendar,
   Phone,
   Mail,
@@ -16,11 +14,12 @@ import {
   ShieldCheck,
   Send,
   AlertCircle,
-  Check,
+  Plus,
 } from 'lucide-react';
 import { Lead, Project } from '../lib/types';
 import {
   getStoredLeads,
+  saveLead,
   updateLeadStatus,
   exportLeadsToCsv,
   calculateLeadIntentScore,
@@ -37,9 +36,9 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({
   onClose,
   allProjects,
 }) => {
-  // Auth state
+  // Auth state (passcode pre-filled for instant demo convenience)
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passcode, setPasscode] = useState('');
+  const [passcode, setPasscode] = useState('admin123');
   const [authError, setAuthError] = useState(false);
 
   // Leads & CRM state
@@ -49,12 +48,13 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({
   const [projectFilter, setProjectFilter] = useState<string>('All');
   const [activeTab, setActiveTab] = useState<'pipeline' | 'automation'>('pipeline');
 
-  // n8n Webhook Test state
-  const [webhookUrl, setWebhookUrl] = useState('');
+  // n8n Webhook Test / Demo Simulation state
+  const [webhookUrl, setWebhookUrl] = useState('https://demo-n8n.elviracrest.com/webhook/realty-leads');
   const [webhookTesting, setWebhookTesting] = useState(false);
   const [webhookResult, setWebhookResult] = useState<{
     success: boolean;
     message: string;
+    steps?: string[];
   } | null>(null);
 
   // Load leads
@@ -68,7 +68,6 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Default demo passcode
     if (passcode === 'admin123' || passcode === 'admin') {
       setIsAuthenticated(true);
       setAuthError(false);
@@ -82,6 +81,68 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({
     if (updated) {
       setLeads((prev) => prev.map((l) => (l.id === leadId ? updated : l)));
     }
+  };
+
+  const handleGenerateSampleLead = () => {
+    const sampleBuyers = [
+      {
+        fullName: 'Vikramaditya Rajagopal (Sample Demo)',
+        phone: '+91 98409 77812',
+        email: 'vikram.r@madrasventures.in',
+        preferredCity: 'Chennai' as const,
+        project: allProjects[0],
+        budgetRange: '₹3.5 Cr - ₹5.5 Cr',
+        purchaseTimeline: 'Immediate (Within 30 Days)',
+        source: 'HomeFinder AI' as const,
+        notes: 'Sample Demo Lead: Interested in 4 BHK sea-facing Sky Villa on ECR.',
+        scheduledVisitDate: new Date(Date.now() + 172800000).toISOString().split('T')[0],
+        scheduledVisitSlot: 'Morning (10:00 AM - 12:00 PM)',
+      },
+      {
+        fullName: 'Lakshmi Narayanan (Sample Demo)',
+        phone: '+91 94432 11900',
+        email: 'lakshmi.n@kovaitextiles.com',
+        preferredCity: 'Coimbatore' as const,
+        project: allProjects[4] || allProjects[0],
+        budgetRange: '₹1.5 Cr - ₹2.5 Cr',
+        purchaseTimeline: '1 to 3 Months',
+        source: 'Site Visit Form' as const,
+        notes: 'Sample Demo Lead: Requested private courtyard villa tour at Race Course.',
+        scheduledVisitDate: new Date(Date.now() + 259200000).toISOString().split('T')[0],
+        scheduledVisitSlot: 'Evening (04:30 PM - 06:30 PM)',
+      },
+      {
+        fullName: 'Prashanth Venkatraman (Sample Demo)',
+        phone: '+91 98840 55432',
+        email: 'prashanth.v@omrcloud.io',
+        preferredCity: 'Chennai' as const,
+        project: allProjects[2] || allProjects[0],
+        budgetRange: '₹75 Lakh - ₹1.1 Cr',
+        purchaseTimeline: 'Immediate (Within 30 Days)',
+        source: 'Homepage Hero' as const,
+        notes: 'Sample Demo Lead: Looking for ready-to-move 2 BHK near ELCOT SEZ OMR.',
+      },
+    ];
+
+    const pick = sampleBuyers[leads.length % sampleBuyers.length];
+    saveLead({
+      fullName: pick.fullName,
+      phone: pick.phone,
+      email: pick.email,
+      preferredCity: pick.preferredCity,
+      projectId: pick.project.id,
+      projectName: pick.project.name,
+      budgetRange: pick.budgetRange,
+      purchaseTimeline: pick.purchaseTimeline,
+      source: pick.source,
+      status: pick.scheduledVisitDate ? 'Site Visit Scheduled' : 'New',
+      notes: pick.notes,
+      consent: true,
+      scheduledVisitDate: pick.scheduledVisitDate,
+      scheduledVisitSlot: pick.scheduledVisitSlot,
+    });
+
+    setLeads(getStoredLeads());
   };
 
   const handleExportCsv = () => {
@@ -99,26 +160,22 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({
   const handleTestN8n = async () => {
     setWebhookTesting(true);
     setWebhookResult(null);
-    try {
-      const res = await fetch('/api/automation/test-n8n', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ webhookUrl }),
-      });
-      const data = await res.json();
-      setWebhookResult({
-        success: data.success,
-        message: data.message || 'Webhook response received',
-      });
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setWebhookResult({
-        success: false,
-        message: `Network error: ${msg}`,
-      });
-    } finally {
-      setWebhookTesting(false);
-    }
+
+    // Simulate realistic demo workflow execution (works 100% offline/static on Vercel too)
+    await new Promise((r) => setTimeout(r, 600));
+
+    const sampleLead = leads[0];
+    setWebhookResult({
+      success: true,
+      message: `Sample Demo Workflow Executed Successfully! (${webhookUrl || 'Simulated Endpoint'})`,
+      steps: [
+        `1. [CRM Capture] Lead ${sampleLead?.id || 'ELV-2026-DEMO'} (${sampleLead?.fullName || 'Sample Buyer'}) validated with RERA consent.`,
+        `2. [n8n Webhook] Dispatched JSON payload to workflow node (HTTP 200 OK - Simulated).`,
+        `3. [WhatsApp Cloud API] Triggered template 'elvira_site_visit_pass_v1' with brochure PDF & gate QR pass.`,
+        `4. [Sales Alert] Assigned relationship manager for ${sampleLead?.projectName || 'Elvira Marina Bay'}.`,
+      ],
+    });
+    setWebhookTesting(false);
   };
 
   // Filter leads
@@ -163,11 +220,11 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({
                   Sales Operations & Lead Qualification CRM
                 </h3>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-[#183F29] text-[#D8BA8F] uppercase font-semibold">
-                  Restricted Staff Access
+                  Interactive Sample Demo
                 </span>
               </div>
               <p className="text-xs text-[#A8BEB2]">
-                Elvira Crest Realty • Authorized Acquisitions & Client Management
+                Elvira Crest Realty • Simulated Sales Pipeline & Workflow Automation
               </p>
             </div>
           </div>
@@ -190,11 +247,14 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({
             </div>
 
             <div>
+              <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 mb-2">
+                Sample Demo Mode
+              </span>
               <h4 className="font-serif text-2xl font-bold text-[#0D2818]">
-                Authorized Staff Authentication
+                Staff CRM Portal Preview
               </h4>
               <p className="text-xs text-[#636F69] mt-1">
-                Enter your administrative PIN to access lead records, site-visit schedules, and workflow webhooks.
+                Demo PIN <code>admin123</code> is pre-filled below. Click below to explore the sample lead pipeline and automation simulator.
               </p>
             </div>
 
@@ -220,6 +280,14 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({
                 className="w-full py-2.5 rounded text-xs font-semibold uppercase tracking-wider bg-[#0D2818] text-[#FAF8F5] hover:bg-[#183F29] transition-all shadow-sm"
               >
                 Authenticate & Access Pipeline
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsAuthenticated(true)}
+                className="w-full py-2 rounded text-xs font-semibold uppercase tracking-wider bg-[#C5A880] text-[#0D2818] hover:bg-[#D4BC9B] transition-all"
+              >
+                1-Click Instant Demo Unlock
               </button>
             </form>
 
@@ -281,13 +349,13 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({
                   ₹32.4 Cr
                 </div>
                 <div className="text-[11px] text-[#636F69] mt-0.5">
-                  Tamil Nadu Portfolio
+                  Sample Portfolio
                 </div>
               </div>
             </div>
 
             {/* Nav Tabs */}
-            <div className="border-b border-[#DDD6C8] flex items-center justify-between">
+            <div className="border-b border-[#DDD6C8] flex flex-wrap items-center justify-between gap-2">
               <div className="flex gap-4">
                 <button
                   onClick={() => setActiveTab('pipeline')}
@@ -307,18 +375,27 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({
                       : 'border-transparent text-[#7A8680] hover:text-[#0D2818]'
                   }`}
                 >
-                  n8n & WhatsApp Integrations
+                  n8n & WhatsApp Demo Simulator
                 </button>
               </div>
 
               {activeTab === 'pipeline' && (
-                <button
-                  onClick={handleExportCsv}
-                  className="flex items-center gap-1.5 px-3 py-1.5 mb-2 rounded text-xs font-semibold bg-[#FFFFFF] border border-[#DDD6C8] text-[#0D2818] hover:bg-[#F2ECE1] transition-colors"
-                >
-                  <Download className="w-3.5 h-3.5 text-[#C5A880]" />
-                  <span>Export to CSV</span>
-                </button>
+                <div className="flex items-center gap-2 mb-2">
+                  <button
+                    onClick={handleGenerateSampleLead}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold bg-[#0D2818] text-[#FAF8F5] hover:bg-[#183F29] transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-[#C5A880]" />
+                    <span>Add Sample Lead</span>
+                  </button>
+                  <button
+                    onClick={handleExportCsv}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold bg-[#FFFFFF] border border-[#DDD6C8] text-[#0D2818] hover:bg-[#F2ECE1] transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#C5A880]" />
+                    <span>Export CSV</span>
+                  </button>
+                </div>
               )}
             </div>
 
@@ -477,30 +554,35 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({
               </div>
             )}
 
-            {/* Tab 2: Automation & Integrations */}
+            {/* Tab 2: Automation & Integrations Simulator */}
             {activeTab === 'automation' && (
               <div className="space-y-6">
                 
                 {/* n8n Webhook Configuration Box */}
                 <div className="p-5 rounded bg-[#FFFFFF] border border-[#E5DFD3] space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-5 h-5 text-[#C5A880]" />
-                    <h4 className="font-serif text-base font-bold text-[#0D2818]">
-                      n8n Workflow Automation Bridge
-                    </h4>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-[#C5A880]" />
+                      <h4 className="font-serif text-base font-bold text-[#0D2818]">
+                        n8n Workflow Automation Simulator (Sample Demo)
+                      </h4>
+                    </div>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-semibold uppercase">
+                      No Real Server Needed
+                    </span>
                   </div>
                   <p className="text-xs text-[#55615B]">
-                    When enabled, every verified lead and site-visit request is dispatched in real-time as a JSON payload to your custom n8n workflow for automated CRM sync, WhatsApp routing, and Slack notifications.
+                    Click <strong>Simulate Demo Workflow</strong> below to see how a captured Tamil Nadu buyer lead flows through n8n qualification, WhatsApp pass generation, and CRM assignment.
                   </p>
 
                   <div className="space-y-2">
                     <label className="block text-xs font-semibold uppercase tracking-wider text-[#7A8680]">
-                      n8n Webhook Listener URL
+                      Simulated n8n Webhook Endpoint
                     </label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="url"
-                        placeholder="https://n8n.yourcompany.com/webhook/realty-leads"
+                        placeholder="https://demo-n8n.elviracrest.com/webhook/realty-leads"
                         value={webhookUrl}
                         onChange={(e) => setWebhookUrl(e.target.value)}
                         className="flex-1 bg-[#FAF8F5] border border-[#DDD6C8] rounded px-3 py-2 text-xs text-[#161D1A] focus:outline-none focus:border-[#0D2818]"
@@ -510,25 +592,24 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({
                         disabled={webhookTesting}
                         className="px-4 py-2 rounded text-xs font-semibold uppercase tracking-wider bg-[#0D2818] text-[#FAF8F5] hover:bg-[#183F29] disabled:opacity-50 transition-colors"
                       >
-                        {webhookTesting ? 'Pinging...' : 'Send Test Ping'}
+                        {webhookTesting ? 'Running Demo...' : 'Simulate Demo Workflow'}
                       </button>
                     </div>
                   </div>
 
                   {webhookResult && (
-                    <div
-                      className={`p-3 rounded text-xs flex items-center gap-2 ${
-                        webhookResult.success
-                          ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
-                          : 'bg-amber-50 border border-amber-200 text-amber-800'
-                      }`}
-                    >
-                      {webhookResult.success ? (
+                    <div className="p-4 rounded bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs space-y-2">
+                      <div className="flex items-center gap-2 font-bold">
                         <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                      ) : (
-                        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span>{webhookResult.message}</span>
+                      </div>
+                      {webhookResult.steps && (
+                        <ul className="space-y-1 pl-6 list-disc text-[11px] text-emerald-800">
+                          {webhookResult.steps.map((s, idx) => (
+                            <li key={idx}>{s}</li>
+                          ))}
+                        </ul>
                       )}
-                      <span>{webhookResult.message}</span>
                     </div>
                   )}
                 </div>
@@ -538,26 +619,28 @@ export const SalesDashboard: React.FC<SalesDashboardProps> = ({
                   <div className="flex items-center gap-2">
                     <Send className="w-5 h-5 text-emerald-700" />
                     <h4 className="font-serif text-base font-bold text-[#0D2818]">
-                      WhatsApp Business Cloud Platform
+                      WhatsApp Business Cloud Platform (Sample Template Preview)
                     </h4>
                   </div>
                   <p className="text-xs text-[#55615B]">
-                    Enables verified WhatsApp notifications, brochure delivery, and gated QR passes to high-intent Tamil Nadu luxury buyers.
+                    Sample preview of the automated WhatsApp message dispatched to prospective buyers upon site-visit registration:
                   </p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                    <div className="p-3 rounded bg-[#FAF8F5] border border-[#DDD6C8]">
-                      <div className="text-[10px] uppercase font-bold text-[#7A8680]">Status</div>
-                      <div className="font-semibold text-emerald-800 mt-1">Ready for Meta Approval</div>
+                  <div className="p-4 rounded bg-[#E7F6EC] border border-[#B7E1C4] text-xs text-[#0D2818] max-w-lg font-sans space-y-1.5 shadow-xs">
+                    <div className="text-[10px] font-bold uppercase text-emerald-800">
+                      WhatsApp Business • Elvira Crest Realty ✓
                     </div>
-                    <div className="p-3 rounded bg-[#FAF8F5] border border-[#DDD6C8]">
-                      <div className="text-[10px] uppercase font-bold text-[#7A8680]">Phone Number ID</div>
-                      <div className="font-mono text-[#161D1A] mt-1 truncate">Configured via .env</div>
-                    </div>
-                    <div className="p-3 rounded bg-[#FAF8F5] border border-[#DDD6C8]">
-                      <div className="text-[10px] uppercase font-bold text-[#7A8680]">Template Approved</div>
-                      <div className="font-semibold text-[#161D1A] mt-1">elvira_site_visit_pass_v1</div>
-                    </div>
+                    <p>
+                      Namaskaram <strong>Suresh Ramachandran</strong>, thank you for scheduling a private tour of <strong>Elvira Marina Bay (ECR, Chennai)</strong>.
+                    </p>
+                    <p>
+                      📅 <strong>Slot:</strong> Morning (10:00 AM - 12:00 PM)<br />
+                      🚘 <strong>Chauffeur Transit:</strong> Confirmed<br />
+                      🔐 <strong>Gate Pass ID:</strong> SV-891102
+                    </p>
+                    <p className="text-[11px] text-emerald-900 italic">
+                      [Attached: Elvira_Marina_Bay_Brochure.pdf]
+                    </p>
                   </div>
                 </div>
 

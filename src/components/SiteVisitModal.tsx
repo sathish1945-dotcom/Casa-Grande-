@@ -239,7 +239,28 @@ export const SiteVisitModal: React.FC<SiteVisitModalProps> = ({
         ) : (
           /* Booking Form */
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            
+            {/* One-Click Sample Demo Banner */}
+            <div className="p-3 rounded bg-[#F2ECE1] border border-[#C5A880]/50 flex items-center justify-between gap-2 text-xs">
+              <div className="text-[#0D2818]">
+                <span className="font-bold">Sample Demo Mode:</span> Test without typing real info
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setFullName('Aravind Krishnan (Sample Demo)');
+                  setPhone('9840955112');
+                  setEmail('aravind.demo@elviracrest.com');
+                  setCabAssistance(true);
+                  setPickupAddress('Boat Club Road, Adyar, Chennai');
+                  setGuests(3);
+                  setErrorMessage(null);
+                }}
+                className="px-3 py-1.5 rounded bg-[#0D2818] text-[#FAF8F5] hover:bg-[#183F29] font-semibold text-[11px] uppercase tracking-wider shrink-0 transition-colors"
+              >
+                Auto-Fill Sample Buyer
+              </button>
+            </div>
+
             {/* Project Selection */}
             <div>
               <label htmlFor="site-visit-project-select" className="block text-xs font-semibold uppercase tracking-wider text-[#7A8680] mb-1">
